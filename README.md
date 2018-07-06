@@ -6,7 +6,11 @@ Confidence Sequence Method for dynamic termination of Binomial tests on
 Monte Carlo simulations. The code in C, Common Lisp, and Python should
 give bitwise identical results, and the results should always be
 safely (conservatively) rounded; the implementation of CSM in floating
-point should not cause any false positive.
+point should not cause any false positive. N.B., The reason I care
+about round-off errors isn't that I expect them to make a big
+difference, but simply that I want peace of mind, and not have to
+wonder if weird numerical issues are causing whatever my system
+reports.
 
 See [this blog post](https://www.pvk.ca/Blog/2018/07/06/testing-slo-type-properties-with-the-confidence-sequence-method/) for more information.
 
