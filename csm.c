@@ -1,5 +1,10 @@
 #include "csm.h"
 
+#ifdef TEST_CSM
+/* The internal tests don't work without assert. */
+# undef NDEBUG
+#endif
+
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -39,6 +44,11 @@ static struct test_case *csm_test_cases;
 #endif
 
 #define NO_TEST(NAME) __attribute__((unused)) static void NO_TEST_##NAME(void)
+
+#ifdef NDEBUG
+# undef assert
+# define assert(X) do {} while (0 && (X))
+#endif
 
 /**
  * Float frobbing utilities, mostly to inc/dec doubles by ULPs.
