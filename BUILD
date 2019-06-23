@@ -5,3 +5,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [],
 )
+
+cc_test(
+    name = "csm_test",
+    srcs = ["csm.c", "csm.h"],
+    copts = ["-DTEST_CSM"],
+    deps = [],
+)
