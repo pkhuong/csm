@@ -12,3 +12,13 @@ cc_test(
     copts = ["-DTEST_CSM"],
     deps = [],
 )
+
+cc_test(
+    name = "csm-stat_test",
+    srcs = ["csm-stat_test.cc"],
+    size = "enormous",  # we need a ton of data points
+        deps = [
+        ":csm",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
