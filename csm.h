@@ -39,13 +39,16 @@ extern "C" {
  */
 
 /**
- * Given n trials and s successes, can we conclude that the success rate
- * differs from alpha with exp(log_eps) false positive rate?
+ * Given n trials and s successes, can we conclude that the success
+ * rate differs from `alpha` with a total false positive rate of at
+ * most `exp(log_eps)`ñ?  The aggressiveness of each call is adjusted
+ * such that the total false positive rate for an unbounded stream of
+ * tests is at most `exp(log_eps)`.
  *
  * Output the current log confidence level in OUT_log_level if non-NULL.
  */
 int
-csm(double *OUT_log_level, uint64_t n, double alpha, uint64_t s, double log_eps);
+csm(uint64_t n, double alpha, uint64_t s, double log_eps, double *OUT_log_level);
 
 /**
  * Compute a conservative lower bound for an alpha-level confidence

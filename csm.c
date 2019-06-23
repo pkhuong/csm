@@ -570,8 +570,8 @@ TEST(robbins_log_choose)
  * Output the current log confidence level in OUT_log_level if non-NULL.
  */
 int
-csm(double *OUT_log_level,
-    uint64_t n, double alpha, uint64_t s, double log_eps)
+csm(uint64_t n, double alpha, uint64_t s, double log_eps,
+    double *OUT_log_level)
 {
 	assert(n < 1UL << 40);
 	assert(alpha > 0);
@@ -596,35 +596,33 @@ csm(double *OUT_log_level,
 	}
 }
 
-#include <stdio.h>
-
 TEST(csm)
 {
 	double level = 0.0;
 
-	assert(csm(NULL, 1, 0.5, 1, -1.0) == 0);
+	assert(csm(1, 0.5, 1, -1.0, NULL) == 0);
 
-	assert(csm(&level, 1, 0.5, 0, -1.0) == 0);
+	assert(csm(1, 0.5, 0, -1.0, &level) == 0);
 	assert(fabs(1.0 - level / 9.992007221626409e-16) < 1e-10);
 
-	assert(csm(NULL, 100, 0.9, 98, log(1e-5)) == 0);
-	assert(csm(NULL, 100, 0.9, 98, log(0.2)) != 0);
+	assert(csm(100, 0.9, 98, log(1e-5), NULL) == 0);
+	assert(csm(100, 0.9, 98, log(0.2), NULL) != 0);
 
-	assert(csm(NULL, (size_t)1e9, 0.99, (size_t)(0.99 * 1e9), -1e-2) == 0);
+	assert(csm((size_t)1e9, 0.99, (size_t)(0.99 * 1e9), -1e-2, NULL) == 0);
 
-	assert(csm(NULL, 10000, 0.01, 50, log(1e-9)) == 0);
-	assert(csm(NULL, 10000, 0.01, 50, log(1e-3)) != 0);
+	assert(csm(10000, 0.01, 50, log(1e-9), NULL) == 0);
+	assert(csm(10000, 0.01, 50, log(1e-3), NULL) != 0);
 
-	assert(csm(&level, 10, 0.05, 1, -10.0) == 0);
+	assert(csm(10, 0.05, 1, -10.0, &level) == 0);
 	assert(fabs(1.0 - level / 1.243108442750477) < 1e-10);
 
-	assert(csm(&level, 100000, 0.05, 100, -10.0) != 0);
+	assert(csm(100000, 0.05, 100, -10.0, &level) != 0);
 	assert(fabs(1.0 - level / -4624.756745998) < 1e-10);
 
-	assert(csm(&level, 1000000, 0.99, 990596, -10.0) == 0);
+	assert(csm(1000000, 0.99, 990596, -10.0, &level) == 0);
 	assert(fabs(1.0 - level / -9.977077184266818) < 1e-10);
 
-	assert(csm(&level, 1000000, 0.99, 990597, -10.0) != 0);
+	assert(csm(1000000, 0.99, 990597, -10.0, &level) != 0);
 	assert(fabs(1.0 - level / -10.039129993485403) < 1e-10);
 }
 
