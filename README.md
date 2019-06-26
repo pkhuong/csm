@@ -20,3 +20,15 @@ I'd particularly like to receive suggestions or pull requests to
 improve the usability of the tools. I'm thinking improvements to the
 report format, graphical reports, and CLIs tools that are easier to
 insert in testing pipelines or in ad hoc shell scripts.
+
+See also
+--------
+
+CSM is sample-efficient, but only works for questions we can recast as
+Binomial tests.
+[Martingale-CS](https://github.com/pkhuong/martingale-cs) can help
+with comparing continuous point statistics like averages, or
+quantiles, but may need a lot more data points.
+[one-sided-KS](https://github.com/pkhuong/one-sided-ks) only helps
+compare full distributions, but may be more efficient than
+`Martingale-CS`.
