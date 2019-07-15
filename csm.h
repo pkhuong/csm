@@ -51,6 +51,24 @@ int
 csm(uint64_t n, double alpha, uint64_t s, double log_eps, double *OUT_log_level);
 
 /**
+ * Returns a confidence interval on the rank of the `quantile` in `n`
+ * sorted i.i.d. observations from a given distribution.  The
+ * intervals form a confidence sequence: the aggressivenes sof each
+ * call is adjusted such that the total flase positive rate for an
+ * unbounded stream of tests is at most `exp(log_eps)`.
+ *
+ * The `direction` argument determines which end of the confidence
+ * interval is computed.  `direction < 0` returns the lower end of the
+ * inclusive interval, `direction > 0` the upper end, and `direction
+ * = 0` the empirical estimate.
+ *
+ * Returns UINT64_MAX if the quantile has likely not been observed
+ * yet.
+ */
+uint64_t
+csm_quantile_index(uint64_t n, double quantile, int direction, double log_eps);
+
+/**
  * Compute a conservative lower bound for an alpha-level confidence
  * interval for a Beta(a, b) distribution.  If upper > 0, compute a
  * conservative upper bound for 1 - alpha.
@@ -59,7 +77,7 @@ csm(uint64_t n, double alpha, uint64_t s, double log_eps, double *OUT_log_level)
  */
 double
 beta_icdf(uint64_t a, uint64_t b, double alpha, int direction);
-  
+
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif

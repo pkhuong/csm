@@ -6,6 +6,7 @@
 #endif
 
 #include <assert.h>
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -368,7 +369,7 @@ sum_update_up(struct sum *sum, double term, bool ordered)
 		return x;
 	}
 }
-	
+
 static inline double
 sum_update_finish(struct sum sum)
 {
@@ -634,6 +635,170 @@ TEST(csm)
 
 	assert(csm(1000000, 0.99, 990597, -10.0, &level) != 0);
 	assert(fabs(1.0 - level / -10.039129993485403) < 1e-10);
+}
+
+/**
+ * Quantile confidence interval.
+ *
+ * The q-th (e.g., 0.9) quantile is the value V such that q of the
+ * observations are below (or equal to) `V`.  In practice, any sample
+ * of `n` observations can't expect to find the qth quantile at
+ * exactly `qn` (if only because that value will not be integral).
+ * However, we can use `csm` to bound the likeliness of the qth
+ * quantile being very far from `qn`.  For example, if the quantile
+ * were actually at `h > qn`, that would mean that `h` observations
+ * were below (or equal to) the actual quantile `V`, where the actual
+ * occurrence rate should be `q`.
+ *
+ * If `V` had a measure of 0, we could use binary search to find the
+ * most extreme indices that pass the CSM test.	 However, for discrete
+ * distributions, we must go out one more, and find the least extreme
+ * indices that *do not pass* CSM: `V` might be exactly equal to that
+ * out-by-one-more index.  However, `V` cannot be even more extreme:
+ * in that case, we'd have enough values strictly less than or
+ * strictly greater than `V` to reject the null hypothesis (i.e., the
+ * probability of that happening is low enough to satisfy `log_eps`).
+ */
+
+/**
+ * Binary searches for the least index for the quantile that violates
+ * the CSM hypothesis, i.e, the maximum index that is so low that the
+ * CSM tells us we'll never (modulo `log_eps`) observe that.
+ *
+ * The value at that index might not actually violate the CSM CI (if
+ * it's exactly equal to the quantile value), but any quantile value
+ * strictly less than the one at that index definitely would.
+ */
+static uint64_t
+quantile_index_lo(uint64_t n, double quantile, double log_eps)
+{
+	uint64_t lo = 0;
+	uint64_t hi = floor(n * quantile);
+
+	/* If 0 isn't extreme enough, we have too few observations. */
+	if (lo >= hi ||
+            csm(n, quantile, lo, log_eps, NULL) == 0) {
+		return UINT64_MAX;
+	}
+
+	/*
+	 * Invariant: csm rejects lo and accepts hi.
+	 *
+	 * If the quantile were lower than the value at lo, we'd only
+	 * have observed "lo" values less than that of the quantile,
+	 * and that's highly unlikely to happen.
+	 */
+	while (lo + 1 < hi) {
+		const uint64_t mid = lo + (hi - lo) / 2;
+		if (csm(n, quantile, mid, log_eps, NULL) == 0) {
+			hi = mid;
+		} else {
+			lo = mid;
+		}
+	}
+
+	return lo;
+}
+
+static uint64_t
+quantile_index_hi(uint64_t n, double quantile, double log_eps)
+{
+	uint64_t lo = ceil(n * quantile);
+	uint64_t hi = n;
+
+	/*
+	 * If n isn't extreme enough, we have too few observations.
+	 */
+	if (lo >= hi ||
+            csm(n, quantile, hi, log_eps, NULL) == 0) {
+		return UINT64_MAX;
+	}
+
+	/*
+	 * Invariant: csm accepts lo and rejects hi.
+	 *
+	 * If the quantile were higher than the value at `hi - 1`,
+	 * we'd have observed "hi" values less than that of the
+	 * quantile, and that's highly unlikely to happen.
+	 */
+	while (lo + 1 < hi) {
+		const uint64_t mid = lo + (hi - lo) / 2;
+		if (csm(n, quantile, mid, log_eps, NULL) == 0) {
+			lo = mid;
+		} else {
+			hi = mid;
+		}
+	}
+
+	return hi - 1;
+}
+
+static const double log2_up = -0.6931471805599454;
+
+uint64_t
+csm_quantile_index(uint64_t n, double quantile, int direction, double log_eps)
+{
+	assert(quantile >= 0 && quantile <= 1 &&
+	       "The quantile value must be a fraction in [0, 1].");
+	if (quantile < 0) {
+		quantile = 0.0;
+	}
+	if (quantile >= 1.0) {
+		quantile = 1.0;
+	}
+        
+        if (n <= 0) {
+                return UINT64_MAX;
+        }
+
+	if (direction == 0) {
+		if (quantile == 0.0) {
+			return 0;
+		}
+
+		if (quantile == 1.0) {
+			return n - 1;
+		}
+
+		const double estimate = quantile * n;
+		const uint64_t floored = (uint64_t)estimate;
+		/*
+		 * If we're, e.g., taking the 10 percentile of 100,
+		 * our estimate is exactly the 10th value, with index
+		 * 10 - 1 = 9.
+		 */
+		if (floored == estimate) {
+                        assert(floored > 0);
+			return floored - 1;
+		}
+
+		return floored;
+	}
+
+	/* Find the lower end of the confidence interval. */
+	if (direction < 0) {
+		if (quantile == 0.0) {
+			return UINT64_MAX;
+		}
+
+		if (quantile == 1.0) {
+			return n - 1;
+		}
+
+		return quantile_index_lo(n, quantile, log_eps + log2_up);
+	}
+
+
+	/* Find the upper end of the confidence interval. */
+	if (quantile == 0.0) {
+		return 0;
+	}
+
+	if (quantile == 1.0) {
+		return UINT64_MAX;
+	}
+
+	return quantile_index_hi(n, quantile, log_eps + log2_up);
 }
 
 /**
