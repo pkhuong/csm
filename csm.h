@@ -51,11 +51,16 @@ int
 csm(uint64_t n, double alpha, uint64_t s, double log_eps, double *OUT_log_level);
 
 /**
- * Returns a confidence interval on the rank of the `quantile` in `n`
- * sorted i.i.d. observations from a given distribution.  The
- * intervals form a confidence sequence: the aggressivenes sof each
+ * Returns a confidence half-interval on the rank of the `quantile` in
+ * `n` sorted i.i.d. observations from a given distribution.  The
+ * intervals form a confidence sequence: the aggressivenes of each
  * call is adjusted such that the total flase positive rate for an
- * unbounded stream of tests is at most `exp(log_eps)`.
+ * unbounded stream of tests is at most `exp(log_eps)`.  This
+ * half-interval already accounts for multiple hypothesis testing when
+ * computing both ends of the confidence interval (i.e., the pair of
+ * half-intervals include the real quantile with probability
+ * `exp(log_eps)`), and is correctly extended for discrete
+ * distributions.
  *
  * The `direction` argument determines which end of the confidence
  * interval is computed.  `direction < 0` returns the lower end of the

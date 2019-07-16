@@ -25,10 +25,12 @@ See also
 --------
 
 CSM is sample-efficient, but only works for questions we can recast as
-Binomial tests.
+Binomial tests.  That being said, many questions do fit that mold; the
+C implementation shows how to construct confidence sequences for
+quantiles on top of the CSM.
 [Martingale-CS](https://github.com/pkhuong/martingale-cs) can help
-with comparing continuous point statistics like averages, or
-quantiles, but may need a lot more data points.
+with comparing continuous point statistics like averages, but tends to
+need a lot more data points.
 [one-sided-KS](https://github.com/pkhuong/one-sided-ks) only helps
-compare full distributions, but may be more efficient than
+compare full distributions, but may be more sample efficient than
 `Martingale-CS`.

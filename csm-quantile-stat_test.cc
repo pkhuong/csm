@@ -54,7 +54,9 @@ bool QuantileInRange(const double quantile, const double eps, size_t niter) {
   for (size_t i = 0; i < niter; ++i) {
     observations.push_back(dist(rng));
 
-    if (i >= kMinObservations) {
+    // The estimation function is a bit slow. Only run it every other
+    // iterations.
+    if (i >= kMinObservations && (i % 2) == 0) {
       double lo, hi;
       std::tie(lo, hi) =
           EstimateQuantile(quantile, kMinObservations, eps, &observations);
