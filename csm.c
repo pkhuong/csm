@@ -733,7 +733,8 @@ quantile_index_hi(uint64_t n, double quantile, double log_eps)
 	return hi - 1;
 }
 
-static const double log2_up = -0.6931471805599454;
+/* - log 2, rounded towards -infinity. */
+static const double minus_log2_down = -0.6931471805599454;
 
 uint64_t
 csm_quantile_index(uint64_t n, double quantile, int direction, double log_eps)
@@ -785,7 +786,7 @@ csm_quantile_index(uint64_t n, double quantile, int direction, double log_eps)
 			return n - 1;
 		}
 
-		return quantile_index_lo(n, quantile, log_eps + log2_up);
+		return quantile_index_lo(n, quantile, log_eps + minus_log2_down);
 	}
 
 
@@ -798,7 +799,7 @@ csm_quantile_index(uint64_t n, double quantile, int direction, double log_eps)
 		return UINT64_MAX;
 	}
 
-	return quantile_index_hi(n, quantile, log_eps + log2_up);
+	return quantile_index_hi(n, quantile, log_eps + minus_log2_down);
 }
 
 /**
